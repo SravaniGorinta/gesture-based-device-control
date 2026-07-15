@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard | Control</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3494e6;
+            --secondary: #4fcf70;
+            --bg-dark: #0f172a;
+            --glass-white: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Strict no-scroll */
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: 50%; left: 50%;
+            width: 800px; height: 800px;
+            background: radial-gradient(circle, rgba(52, 148, 230, 0.1) 0%, rgba(79, 207, 112, 0.05) 50%, transparent 70%);
+            z-index: -1;
+            filter: blur(80px);
+            transform: translate(-50%, -50%);
+        }
+
+        /* REDUCED NAV SIZE */
+        .top-nav {
+            padding: 12px 40px; /* Reduced from 20px */
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            height: 60px; /* Explicit height to help calc */
+            box-sizing: border-box;
+        }
+
+        .top-nav h2 { font-size: 1.2rem; margin: 0; }
+
+        .back-home { color: #94a3b8; text-decoration: none; font-weight: bold; font-size: 0.8rem; }
+
+        /* ADJUSTED LAYOUT CONSTRAINTS */
+        .main-layout {
+            display: grid; 
+            grid-template-columns: 1.3fr 0.7fr;
+            gap: 20px; 
+            padding: 20px; 
+            flex: 1; /* Takes up all remaining space below nav */
+            min-height: 0; /* Important for grid items to shrink */
+        }
+
+        .camera-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 25px; 
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            height: 100%;
+        }
+
+        .camera-section img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        .status-section { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            grid-template-rows: 1fr 1fr; 
+            gap: 15px; 
+            height: 100%;
+        }
+
+        .device-tile { 
+            padding: 18px; 
+            border-radius: 20px; 
+            background: var(--glass-white); 
+            backdrop-filter: blur(20px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .tile-selected {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%) !important;
+            box-shadow: 0 10px 25px rgba(52, 148, 230, 0.3);
+            border: none !important;
+            transform: scale(1.02);
+        }
+
+        .status-circle {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .glow-on {
+            background: radial-gradient(circle, #fff 0%, #22c55e 60%) !important;
+            box-shadow: 0 0 15px #22c55e;
+            border: 2px solid #fff !important;
+        }
+
+        .glow-off {
+            background: radial-gradient(circle, #fff 0%, #ff4d4d 60%) !important;
+            box-shadow: 0 0 15px #ff4d4d;
+            border: 2px solid #fff !important;
+        }
+
+        .status-val { font-size: 0.9rem; font-weight: bold; margin-top: 5px; }
+        .device-icon { font-size: 1.8rem; opacity: 0.2; }
+        .tile-selected .device-icon { opacity: 1; color: white; }
+        .label { font-size: 0.65rem; color: #94a3b8; margin: 0; text-transform: uppercase; }
+        .name { margin: 2px 0; font-size: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+
+    <header class="top-nav">
+        <a href="{{ url_for('landing') }}" class="back-home"><i class="fas fa-chevron-left"></i> EXIT SYSTEM</a>
+        <h2 style="letter-spacing: 1px;">CONTROL PANEL</h2>
+        <div style="color: var(--secondary); font-size: 0.75rem; font-weight: bold;">● LIVE FEED</div>
+    </header>
+
+    <div class="main-layout">
+        <div class="camera-section">
+            <img src="{{ url_for('video_feed') }}" alt="Gesture Tracking">
+        </div>
+
+        <div class="status-section">
+            {% set info = [
+                {'name': 'LIGHT', 'icon': 'fa-lightbulb'},
+                {'name': 'FAN', 'icon': 'fa-fan'},
+                {'name': 'BED BULB', 'icon': 'fa-moon'},
+                {'name': 'AC', 'icon': 'fa-snowflake'}
+            ] %}
+            
+            {% for dev in info %}
+            <div id="tile-{{ dev.name }}" class="device-tile">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <p class="label">Module {{ loop.index }}</p>
+                        <h3 class="name">{{ dev.name }}</h3>
+                    </div>
+                    <i class="fas {{ dev.icon }} device-icon"></i>
+                </div>
+                
+                <div>
+                    <div id="circle-{{ dev.name }}" class="status-circle"></div>
+                    <div id="status-{{ dev.name }}" class="status-val" style="color: #64748b;">OFF</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        function updateStatus() {
+            fetch('/get_status')
+                .then(res => res.json())
+                .then(data => {
+                    const selectedZone = data.target;
+                    ["LIGHT", "FAN", "BED BULB", "AC"].forEach(dev => {
+                        const tile = document.getElementById('tile-' + dev);
+                        const circle = document.getElementById('circle-' + dev);
+                        const statusTxt = document.getElementById('status-' + dev);
+                        const powerState = data[dev]; 
+                        const isSelected = (selectedZone === dev);
+
+                        tile.classList.toggle('tile-selected', isSelected);
+
+                        if(powerState === "ON") {
+                            circle.className = "status-circle glow-on";
+                            statusTxt.innerText = "ACTIVE";
+                            statusTxt.style.color = "white";
+                        } else {
+                            statusTxt.innerText = "OFF";
+                            if(isSelected) {
+                                circle.className = "status-circle glow-off";
+                                statusTxt.style.color = "white";
+                            } else {
+                                circle.className = "status-circle";
+                                statusTxt.style.color = "#64748b";
+                            }
+                        }
+                    });
+                });
+        }
+        setInterval(updateStatus, 300);
+    </script>
+</body>
+</html>
